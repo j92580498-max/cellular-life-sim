@@ -119,6 +119,16 @@ export class UI {
     $('#set-show-grid').addEventListener('change', e => {
       this.renderer.showGrid = e.target.checked;
     });
+    const cubeEl = $('#set-cube-edges');
+    if (cubeEl) {
+      cubeEl.checked = this.renderer.showCubeEdges;
+      cubeEl.addEventListener('change', e => { this.renderer.showCubeEdges = e.target.checked; });
+    }
+    const settleEl = $('#set-settlements');
+    if (settleEl) {
+      settleEl.checked = this.renderer.showSettlements;
+      settleEl.addEventListener('change', e => { this.renderer.showSettlements = e.target.checked; });
+    }
   }
 
   _bindChart() {
