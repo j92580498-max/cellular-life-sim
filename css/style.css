@@ -130,6 +130,12 @@ canvas#world {
   flex-direction: column;
   gap: 6px;
   pointer-events: none;
+  align-items: center;
+}
+
+#hud-bottom > * {
+  width: 100%;
+  max-width: 760px;
 }
 
 .control-row {
@@ -332,17 +338,14 @@ canvas#world {
 }
 
 #chart-panel {
-  position: absolute;
-  right: 10px;
-  bottom: 110px;
-  width: 320px;
-  max-width: calc(100vw - 20px);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   background: rgba(10, 14, 20, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 6px 8px 8px;
   pointer-events: auto;
-  z-index: 4;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -448,7 +451,7 @@ canvas#world {
   .stat .value { font-size: 13px; }
   .speed-wrap input[type="range"] { width: 70px; }
   .ctrl { height: 40px; min-width: 40px; }
-  #chart-panel { width: calc(100vw - 20px); bottom: 156px; }
-  #stats-chart { height: 100px; }
-  #cell-info { bottom: 290px; }
+  #stats-chart { height: 90px; }
+  .chart-title { display: none; }
+  .chart-legend { font-size: 9px; gap: 4px; }
 }

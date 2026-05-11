@@ -87,6 +87,31 @@ export class UI {
     bindRange('#set-mutation', '#set-mutation-val', 'mutationStrength', v => v / 100, v => `${v}%`);
     bindRange('#set-decay', '#set-decay-val', 'organicDecay', v => v / 1000, v => `${(v / 10).toFixed(1)}%`);
     bindRange('#set-toxic', '#set-toxic-val', 'toxicThreshold', v => v, v => `${v}`);
+    // Климат применяем также на лету — при сборе _applyPendingLive(), без пересоздания Simulation.
+    const climateRange = $('#set-climate');
+    const climateVal = $('#set-climate-val');
+    if (climateRange) {
+      climateRange.addEventListener('input', () => {
+        const v = parseInt(climateRange.value, 10) / 100;
+        climateVal.textContent = `${climateRange.value}%`;
+        const sim = this.getSim();
+        sim.params.climateSeverity = v;
+        this._pendingParams = this._pendingParams || {};
+        this._pendingParams.climateSeverity = v;
+      });
+    }
+    const dayRange = $('#set-day');
+    const dayVal = $('#set-day-val');
+    if (dayRange) {
+      dayRange.addEventListener('input', () => {
+        const v = parseInt(dayRange.value, 10);
+        dayVal.textContent = `${v}`;
+        const sim = this.getSim();
+        sim.params.dayCycleLen = v;
+        this._pendingParams = this._pendingParams || {};
+        this._pendingParams.dayCycleLen = v;
+      });
+    }
 
     $('#set-show-sectors').addEventListener('change', e => {
       this.renderer.showSectors = e.target.checked;
@@ -186,6 +211,18 @@ export class UI {
     document.getElementById('pop-root').textContent = p[1];
     document.getElementById('pop-antenna').textContent = p[2];
     document.getElementById('pop-predator').textContent = p[3];
+
+    const climateEl = document.getElementById('stat-climate');
+    if (climateEl) {
+      // Иконка по фазе дня, плюс молния при активном шторме.
+      const lm = stats.lightMul ?? 1;
+      let icon = '☀️';
+      if (lm < 0.25) icon = '🌑';
+      else if (lm < 0.55) icon = '🌗';
+      else if (lm < 0.85) icon = '⛅';
+      const storm = stats.storm ? ' ⚡' : '';
+      climateEl.textContent = `${icon} ${(lm * 100).toFixed(0)}%${storm}`;
+    }
   }
 
   _showHintBriefly() {

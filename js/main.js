@@ -83,6 +83,8 @@ function frame(now) {
       tick: sim.tick,
       population: sim.cells.size,
       populationStats: sim.populationStats,
+      lightMul: sim.lightMul,
+      storm: sim.storm,
       fps,
     };
     ui.updateStats(stats);
