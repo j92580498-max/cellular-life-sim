@@ -25,6 +25,12 @@ export class Simulation {
     this.populationStats = [0, 0, 0, 0];
     this.deathsThisTick = 0;
     this.birthsThisTick = 0;
+    // Климат: динамические модификаторы окружения. Обновляются в _climateTick().
+    this.climateTick = 0;
+    this.lightMul = 1;     // множитель света (день/ночь, 0..1)
+    this.metabMul = 1;     // множитель базового метаболизма
+    this.storm = null;     // {sx, sy, ticksLeft, totalDuration, intensity}
+    this.dayPhase = 0;     // 0..1 — доля в текущих сутках
     // Workspace-буферы для прямого прохода мозга — переиспользуются между клетками,
     // чтобы не аллоцировать памяти каждый тик.
     this._inputBuf  = new Float32Array(BRAIN_IN);
@@ -89,11 +95,66 @@ export class Simulation {
       }
     }
 
-    // Окружение: разложение органики.
+    // Климат и окружение.
+    this._climateTick();
     this.world.envTick();
 
     // Подсчёт статистики.
     this._countPopulation();
+  }
+
+  // ------------------------------------------------------------------
+  // Климат — динамические условия. Суровость влияет на:
+  //  — контраст дня/ночи (ночь становится темнее, день короче)
+  //  — постоянную прибавку к базовому метаболизму
+  //  — вероятность и интенсивность штормов (выброс органики в случайный сектор)
+  _climateTick() {
+    const P = this.params;
+    const sev = Math.max(0, Math.min(1, P.climateSeverity ?? 0));
+    const cycleLen = Math.max(60, P.dayCycleLen ?? 600);
+    this.climateTick++;
+
+    // День/ночь. Синус сдвинут так, чтобы симуляция стартовала утром (level=0.5→растёт).
+    const phase = (this.climateTick % cycleLen) / cycleLen;
+    this.dayPhase = phase;
+    const sun = 0.5 + 0.5 * Math.sin((phase - 0.25) * 2 * Math.PI);   // 0..1
+    // Суровость обостряет ночь. min в мягком мире — 0.35, в жёстком — 0.05.
+    const minLight = 0.35 - sev * 0.30;
+    this.lightMul = minLight + (1 - minLight) * Math.pow(sun, 1 + sev * 1.5);
+    this.metabMul = 1 + sev * 0.6;
+
+    // Шторма.
+    if (this.storm) {
+      this._applyStorm(this.storm);
+      this.storm.ticksLeft--;
+      if (this.storm.ticksLeft <= 0) this.storm = null;
+    } else if (sev > 0 && Math.random() < sev * 0.0025) {
+      const N = this.world.sectorsPerSide;
+      const dur = 60 + Math.floor(sev * 240);
+      this.storm = {
+        sx: Math.floor(Math.random() * N),
+        sy: Math.floor(Math.random() * N),
+        ticksLeft: dur,
+        totalDuration: dur,
+        intensity: 0.4 + sev * 0.6,
+      };
+    }
+  }
+
+  // В активном секторе ливень: органика летит вниз, ядовитость возрастает.
+  _applyStorm(s) {
+    const W = this.world;
+    const S = W.sectorSize;
+    const x0 = s.sx * S, y0 = s.sy * S;
+    const x1 = Math.min(W.w, x0 + S);
+    const y1 = Math.min(W.h, y0 + S);
+    const add = s.intensity * 0.45;
+    for (let y = y0; y < y1; y++) {
+      const row = y * W.w;
+      for (let x = x0; x < x1; x++) {
+        W.organic[row + x] += add;
+      }
+    }
   }
 
   _countPopulation() {
@@ -114,8 +175,8 @@ export class Simulation {
     const P = this.params;
     const idx = W.idx(cell.x, cell.y);
 
-    // 1. Метаболизм — обязательная трата энергии.
-    cell.energy -= P.baseMetabolism * cell.genome.metabolism;
+    // 1. Метаболизм — обязательная трата энергии (суровый климат увеличивает расход).
+    cell.energy -= P.baseMetabolism * cell.genome.metabolism * this.metabMul;
 
     // 2. Токсичность — урон от избытка органики.
     const tox = W.toxicityAt(idx);
@@ -189,7 +250,7 @@ export class Simulation {
 
     inp[0]  = cell.energy / P.maxEnergy;
     inp[1]  = Math.min(1, cell.age / cell.genome.maxAge);
-    inp[2]  = W.light[idx];
+    inp[2]  = W.light[idx] * this.lightMul;
     inp[3]  = W.charge[idx];
     inp[4]  = Math.min(1, W.organic[idx] / P.toxicThreshold);
     inp[5]  = tox;                                // 0..1
@@ -208,9 +269,8 @@ export class Simulation {
   // Питание разных типов.
 
   _feedLeaf(cell, idx) {
-    // Лист зависит от света. Свет уменьшается, если над ним есть другие листья
-    // (но здесь упрощённо: мы не делаем затенения — лист берёт свет с тайла).
-    cell.energy += this.world.light[idx] * this.params.leafGain;
+    // Лист зависит от света. Ночью (lightMul→0) фотосинтез практически останавливается.
+    cell.energy += this.world.light[idx] * this.params.leafGain * this.lightMul;
   }
 
   _feedRoot(cell, idx) {

@@ -19,6 +19,7 @@
         <div class="stat"><span class="label">Тик</span><span id="stat-tick" class="value">0</span></div>
         <div class="stat"><span class="label">Клеток</span><span id="stat-pop" class="value">0</span></div>
         <div class="stat" title="Среднее время жизни — растёт по мере того, как мозги клеток оптимизируются отбором"><span class="label">Жизнь ср.</span><span id="stat-life" class="value">0</span></div>
+        <div class="stat" title="Климат: фаза дня/ночи; молния — активный шторм в одном из секторов"><span class="label">Климат</span><span id="stat-climate" class="value">☀️ 100%</span></div>
         <div class="stat"><span class="label">FPS</span><span id="stat-fps" class="value">0</span></div>
       </div>
       <div class="population-bars" id="pop-bars">
@@ -29,24 +30,23 @@
       </div>
     </div>
 
-    <div id="chart-panel">
-      <div class="chart-head">
-        <span class="chart-title">Статистика</span>
-        <div class="chart-legend">
-          <span class="leg" style="--c:#eceff4">Клеток</span>
-          <span class="leg" style="--c:#5dade2">Жизнь</span>
-          <span class="leg" style="--c:#bb86fc">Поколение</span>
-          <span class="leg" style="--c:#6abe6f">Лист</span>
-          <span class="leg" style="--c:#b58060">Корень</span>
-          <span class="leg" style="--c:#d8c264">Антенна</span>
-          <span class="leg" style="--c:#d96868">Хищник</span>
-        </div>
-        <button id="btn-chart-close" class="chart-close" aria-label="Скрыть">✕</button>
-      </div>
-      <canvas id="stats-chart"></canvas>
-    </div>
-
     <div id="hud-bottom">
+      <div id="chart-panel">
+        <div class="chart-head">
+          <span class="chart-title">Статистика</span>
+          <div class="chart-legend">
+            <span class="leg" style="--c:#eceff4">Клеток</span>
+            <span class="leg" style="--c:#5dade2">Жизнь</span>
+            <span class="leg" style="--c:#bb86fc">Поколение</span>
+            <span class="leg" style="--c:#6abe6f">Лист</span>
+            <span class="leg" style="--c:#b58060">Корень</span>
+            <span class="leg" style="--c:#d8c264">Антенна</span>
+            <span class="leg" style="--c:#d96868">Хищник</span>
+          </div>
+          <button id="btn-chart-close" class="chart-close" aria-label="Скрыть">✕</button>
+        </div>
+        <canvas id="stats-chart"></canvas>
+      </div>
       <div class="control-row">
         <button id="btn-play" class="ctrl primary" aria-label="Пауза / Воспроизведение">⏸</button>
         <button id="btn-step" class="ctrl" aria-label="Шаг">⏭</button>
@@ -108,6 +108,18 @@
           <label>Порог токсичности</label>
           <input type="range" id="set-toxic" min="20" max="200" value="80" />
           <span class="mini" id="set-toxic-val">80</span>
+        </div>
+
+        <div class="setting">
+          <label title="0% — мягкий мир. 100% — короткий день, лютая ночь, частые шторма, высокий метаболизм.">Суровость климата</label>
+          <input type="range" id="set-climate" min="0" max="100" value="30" />
+          <span class="mini" id="set-climate-val">30%</span>
+        </div>
+
+        <div class="setting">
+          <label>Длина суток (тиков)</label>
+          <input type="range" id="set-day" min="60" max="2000" step="20" value="600" />
+          <span class="mini" id="set-day-val">600</span>
         </div>
 
         <div class="setting checkbox">

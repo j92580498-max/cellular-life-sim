@@ -79,6 +79,29 @@ export class Renderer {
 
     if (this.showGrid && this.scale >= 4) this._drawGrid();
     if (this.showSectors) this._drawSectors();
+    if (this.sim.storm) this._drawStorm(this.sim.storm);
+
+    // Ночь — лёгкое потемнение поверх всего, чтобы пользователь видел смену суток.
+    const lm = this.sim.lightMul ?? 1;
+    if (lm < 0.95) {
+      ctx.fillStyle = `rgba(8, 14, 40, ${Math.min(0.55, (1 - lm) * 0.6)})`;
+      ctx.fillRect(0, 0, c.width, c.height);
+    }
+  }
+
+  _drawStorm(s) {
+    const ctx = this.ctx;
+    const S = this.sim.world.sectorSize * this.scale;
+    const x = this.viewX + s.sx * S;
+    const y = this.viewY + s.sy * S;
+    // Пульсация по оставшемуся времени.
+    const t = s.ticksLeft / s.totalDuration;
+    const pulse = 0.25 + 0.25 * Math.abs(Math.sin(performance.now() / 220));
+    ctx.fillStyle = `rgba(220, 200, 80, ${pulse * t})`;
+    ctx.fillRect(x, y, S, S);
+    ctx.strokeStyle = `rgba(255, 230, 120, ${0.4 + 0.4 * t})`;
+    ctx.lineWidth = 2 * this.dpr;
+    ctx.strokeRect(x + 1, y + 1, S - 2, S - 2);
   }
 
   _drawWorldToBitmap() {
