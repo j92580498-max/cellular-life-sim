@@ -6,17 +6,21 @@ import { Simulation } from './sim.js';
 import { Renderer } from './renderer.js';
 import { InputController } from './input.js';
 import { UI } from './ui.js';
+import { StatsChart } from './chart.js';
 
 const canvas = document.getElementById('world');
+const chartCanvas = document.getElementById('stats-chart');
 
 let params = { ...DEFAULT_PARAMS };
 let sim = new Simulation(params);
 let renderer = new Renderer(canvas, sim);
 let selectedCell = null;
+const statsChart = new StatsChart(chartCanvas);
 
 const ui = new UI({
   sim,
   renderer,
+  statsChart,
   getSim: () => sim,
   onReset: () => reset(),
 });
@@ -30,6 +34,7 @@ function reset() {
   ui.setSim(sim);
   selectedCell = null;
   ui.showCellInfo(null);
+  statsChart.reset();
 }
 
 new InputController(canvas, renderer, (wx, wy) => {
@@ -72,14 +77,17 @@ function frame(now) {
   fpsFrames++;
   if (now - lastStatsAt > 250) {
     const fps = fpsFrames * 1000 / fpsAccum;
-    ui.updateStats({
+    const stats = {
       generation: sim.maxGeneration,
       avgLifespan: sim.avgLifespan,
       tick: sim.tick,
       population: sim.cells.size,
       populationStats: sim.populationStats,
       fps,
-    });
+    };
+    ui.updateStats(stats);
+    if (!ui.paused) statsChart.push(stats);
+    statsChart.draw();
     fpsAccum = 0;
     fpsFrames = 0;
     lastStatsAt = now;

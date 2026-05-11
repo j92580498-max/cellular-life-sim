@@ -29,6 +29,23 @@
       </div>
     </div>
 
+    <div id="chart-panel">
+      <div class="chart-head">
+        <span class="chart-title">Статистика</span>
+        <div class="chart-legend">
+          <span class="leg" style="--c:#eceff4">Клеток</span>
+          <span class="leg" style="--c:#5dade2">Жизнь</span>
+          <span class="leg" style="--c:#bb86fc">Поколение</span>
+          <span class="leg" style="--c:#6abe6f">Лист</span>
+          <span class="leg" style="--c:#b58060">Корень</span>
+          <span class="leg" style="--c:#d8c264">Антенна</span>
+          <span class="leg" style="--c:#d96868">Хищник</span>
+        </div>
+        <button id="btn-chart-close" class="chart-close" aria-label="Скрыть">✕</button>
+      </div>
+      <canvas id="stats-chart"></canvas>
+    </div>
+
     <div id="hud-bottom">
       <div class="control-row">
         <button id="btn-play" class="ctrl primary" aria-label="Пауза / Воспроизведение">⏸</button>
@@ -39,6 +56,7 @@
           <input id="speed" type="range" min="1" max="50" value="3" />
           <span id="speed-val" class="mini">3×</span>
         </div>
+        <button id="btn-chart" class="ctrl" aria-label="График статистики" title="График статистики">📈</button>
         <button id="btn-menu" class="ctrl" aria-label="Меню">☰</button>
       </div>
 
