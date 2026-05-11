@@ -3,9 +3,10 @@
 import { VIEW_MODES, CELL_TYPE_NAMES, CELL_TYPE_KEYS, DEFAULT_PARAMS } from './constants.js';
 
 export class UI {
-  constructor({ sim, renderer, onReset, getSim }) {
+  constructor({ sim, renderer, statsChart, onReset, getSim }) {
     this.sim = sim;
     this.renderer = renderer;
+    this.statsChart = statsChart;
     this.onReset = onReset;
     this.getSim = getSim;  // ленивый геттер, потому что sim пересоздаётся при сбросе.
     this.paused = false;
@@ -14,6 +15,7 @@ export class UI {
 
     this._bindControls();
     this._bindMenu();
+    this._bindChart();
     this._showHintBriefly();
   }
 
@@ -92,6 +94,27 @@ export class UI {
     $('#set-show-grid').addEventListener('change', e => {
       this.renderer.showGrid = e.target.checked;
     });
+  }
+
+  _bindChart() {
+    this.chartPanel = document.getElementById('chart-panel');
+    this.btnChart = document.getElementById('btn-chart');
+    const btnClose = document.getElementById('btn-chart-close');
+    // Состояние сохраняем в localStorage, чтобы между сессиями помнилось.
+    let hidden = false;
+    try { hidden = localStorage.getItem('chart-hidden') === '1'; } catch (e) {}
+    this.chartPanel.classList.toggle('hidden', hidden);
+    this.btnChart.classList.toggle('primary', !hidden);
+
+    const set = (state) => {
+      this.chartPanel.classList.toggle('hidden', !state);
+      this.btnChart.classList.toggle('primary', state);
+      try { localStorage.setItem('chart-hidden', state ? '0' : '1'); } catch (e) {}
+    };
+    this.btnChart.addEventListener('click', () => {
+      set(this.chartPanel.classList.contains('hidden'));
+    });
+    btnClose.addEventListener('click', () => set(false));
   }
 
   togglePause(forceState) {
