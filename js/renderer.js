@@ -12,6 +12,10 @@ export class Renderer {
     this.mode = VIEW_MODES.CELLS;
     this.showSectors = false;
     this.showGrid = false;
+    // «Кубики» и «поселения» — стилизация в режиме клеток. Внутренние грани
+    // между клетками одного клана и контурные линии границ кланов соответственно.
+    this.showCubeEdges = true;
+    this.showSettlements = true;
     this.dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
 
     // Камера: смещение в координатах мира + масштаб (пиксель = scale).
@@ -77,6 +81,12 @@ export class Renderer {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.bitmap, this.viewX, this.viewY, this.bitmap.width * this.scale, this.bitmap.height * this.scale);
 
+    // Кубики/поселения — только в режиме клеток, и только если масштаб даёт
+    // достаточно пикселей на клетку, чтобы линии были различимы.
+    if (this.mode === VIEW_MODES.CELLS && this.scale >= 2.5 &&
+        (this.showSettlements || this.showCubeEdges)) {
+      this._drawSettlementBorders();
+    }
     if (this.showGrid && this.scale >= 4) this._drawGrid();
     if (this.showSectors) this._drawSectors();
     if (this.sim.storm) this._drawStorm(this.sim.storm);
@@ -86,6 +96,86 @@ export class Renderer {
     if (lm < 0.95) {
       ctx.fillStyle = `rgba(8, 14, 40, ${Math.min(0.55, (1 - lm) * 0.6)})`;
       ctx.fillRect(0, 0, c.width, c.height);
+    }
+  }
+
+  // Контуры поселений + сетка-«кубики». Для каждой клетки смотрим правого и
+  // нижнего соседа: если они принадлежат другому клану (или соседа нет вовсе),
+  // ребро между ними — граница поселения. Иначе — внутренняя грань (cube edge).
+  // Всё рисуем двумя Path2D и за один stroke на каждую категорию, чтобы 5000+
+  // клеток не съели FPS.
+  _drawSettlementBorders() {
+    const W = this.sim.world;
+    const cells = this.sim.cells;
+    const w = W.w, h = W.h;
+    const scale = this.scale;
+    const ox = this.viewX, oy = this.viewY;
+    const grid = W.cellGrid;
+    const wantCube = this.showCubeEdges;
+    const wantSettle = this.showSettlements;
+
+    const cube = wantCube ? new Path2D() : null;
+    const border = wantSettle ? new Path2D() : null;
+
+    for (let y = 0; y < h; y++) {
+      const py = oy + y * scale;
+      const pyEnd = py + scale;
+      const rowBase = y * w;
+      for (let x = 0; x < w; x++) {
+        const i = rowBase + x;
+        const id = grid[i];
+        if (id === 0) continue;
+        const cell = cells.get(id);
+        if (!cell) continue;
+        const myClan = cell.clan;
+        const px = ox + x * scale;
+        const pxEnd = px + scale;
+
+        // Правое ребро.
+        if (x + 1 < w) {
+          const rId = grid[i + 1];
+          if (rId === 0) {
+            if (border) { border.moveTo(pxEnd, py); border.lineTo(pxEnd, pyEnd); }
+          } else {
+            const r = cells.get(rId);
+            if (r) {
+              if (r.clan !== myClan) {
+                if (border) { border.moveTo(pxEnd, py); border.lineTo(pxEnd, pyEnd); }
+              } else if (cube) {
+                cube.moveTo(pxEnd, py); cube.lineTo(pxEnd, pyEnd);
+              }
+            }
+          }
+        }
+        // Нижнее ребро.
+        if (y + 1 < h) {
+          const bId = grid[i + w];
+          if (bId === 0) {
+            if (border) { border.moveTo(px, pyEnd); border.lineTo(pxEnd, pyEnd); }
+          } else {
+            const b = cells.get(bId);
+            if (b) {
+              if (b.clan !== myClan) {
+                if (border) { border.moveTo(px, pyEnd); border.lineTo(pxEnd, pyEnd); }
+              } else if (cube) {
+                cube.moveTo(px, pyEnd); cube.lineTo(pxEnd, pyEnd);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const ctx = this.ctx;
+    if (cube) {
+      ctx.lineWidth = Math.max(1, scale * 0.08);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.stroke(cube);
+    }
+    if (border) {
+      ctx.lineWidth = Math.max(1.4, scale * 0.18);
+      ctx.strokeStyle = 'rgba(255, 240, 200, 0.85)';
+      ctx.stroke(border);
     }
   }
 

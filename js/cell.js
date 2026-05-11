@@ -25,6 +25,10 @@ export class Cell {
     // Динамический цвет, кэшируем чтобы не пересчитывать на каждый кадр.
     const base = CELL_TYPE_COLORS[genome.cellType] ?? CELL_TYPE_COLORS[0];
     this._color = genomeColor(genome, base);
+    // «Клан» = id поселения: соседи с одинаковым кланом образуют одно поселение.
+    // Тип клетки + квантованный colorHue (8 бинов) даёт до 32 различимых кланов.
+    const CLAN_BINS = 8;
+    this.clan = genome.cellType * CLAN_BINS + Math.min(CLAN_BINS - 1, Math.floor(genome.colorHue * CLAN_BINS));
   }
 
   get type() { return this.genome.cellType; }
