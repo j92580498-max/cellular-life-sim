@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Эволюция клеток — симуляция искусственной жизни</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="world"></canvas>
+
+    <div id="hud-top">
+      <div class="stat-block">
+        <div class="stat"><span class="label">Поколение</span><span id="stat-gen" class="value">0</span></div>
+        <div class="stat"><span class="label">Тик</span><span id="stat-tick" class="value">0</span></div>
+        <div class="stat"><span class="label">Клеток</span><span id="stat-pop" class="value">0</span></div>
+        <div class="stat" title="Среднее время жизни — растёт по мере того, как мозги клеток оптимизируются отбором"><span class="label">Жизнь ср.</span><span id="stat-life" class="value">0</span></div>
+        <div class="stat"><span class="label">FPS</span><span id="stat-fps" class="value">0</span></div>
+      </div>
+      <div class="population-bars" id="pop-bars">
+        <div class="bar leaf" title="Фотосинтетик"><span class="dot"></span><span id="pop-leaf">0</span></div>
+        <div class="bar root" title="Корень"><span class="dot"></span><span id="pop-root">0</span></div>
+        <div class="bar antenna" title="Антенна"><span class="dot"></span><span id="pop-antenna">0</span></div>
+        <div class="bar predator" title="Хищник"><span class="dot"></span><span id="pop-predator">0</span></div>
+      </div>
+    </div>
+
+    <div id="hud-bottom">
+      <div class="control-row">
+        <button id="btn-play" class="ctrl primary" aria-label="Пауза / Воспроизведение">⏸</button>
+        <button id="btn-step" class="ctrl" aria-label="Шаг">⏭</button>
+        <button id="btn-reset" class="ctrl" aria-label="Сброс">⟲</button>
+        <div class="speed-wrap">
+          <label class="mini">Скорость</label>
+          <input id="speed" type="range" min="1" max="50" value="3" />
+          <span id="speed-val" class="mini">3×</span>
+        </div>
+        <button id="btn-menu" class="ctrl" aria-label="Меню">☰</button>
+      </div>
+
+      <div id="view-modes" class="control-row">
+        <button class="mode active" data-mode="cells">Клетки</button>
+        <button class="mode" data-mode="organic">Органика</button>
+        <button class="mode" data-mode="light">Свет</button>
+        <button class="mode" data-mode="toxin">Яд</button>
+        <button class="mode" data-mode="energy">Энергия</button>
+      </div>
+    </div>
+
+    <div id="menu" class="hidden">
+      <div class="menu-panel">
+        <header>
+          <h2>Настройки</h2>
+          <button id="btn-close-menu" class="ctrl">✕</button>
+        </header>
+
+        <div class="setting">
+          <label>Размер мира</label>
+          <div class="seg" data-key="worldSize">
+            <button data-v="80">80</button>
+            <button data-v="120" class="active">120</button>
+            <button data-v="160">160</button>
+            <button data-v="220">220</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <label>Стартовая популяция</label>
+          <input type="range" id="set-start-pop" min="20" max="500" value="150" />
+          <span class="mini" id="set-start-pop-val">150</span>
+        </div>
+
+        <div class="setting">
+          <label>Сила мутации</label>
+          <input type="range" id="set-mutation" min="1" max="100" value="15" />
+          <span class="mini" id="set-mutation-val">15%</span>
+        </div>
+
+        <div class="setting">
+          <label>Скорость разложения органики</label>
+          <input type="range" id="set-decay" min="0" max="50" value="5" />
+          <span class="mini" id="set-decay-val">0.5%</span>
+        </div>
+
+        <div class="setting">
+          <label>Порог токсичности</label>
+          <input type="range" id="set-toxic" min="20" max="200" value="80" />
+          <span class="mini" id="set-toxic-val">80</span>
+        </div>
+
+        <div class="setting checkbox">
+          <label><input type="checkbox" id="set-show-sectors" /> Показать сектора</label>
+        </div>
+
+        <div class="setting checkbox">
+          <label><input type="checkbox" id="set-show-grid" /> Сетка</label>
+        </div>
+
+        <p class="hint">Изменения применяются после нажатия «Сброс».</p>
+      </div>
+    </div>
+
+    <div id="hint" class="hidden">
+      <p>Касание: перемещение • Двумя пальцами: зум • Тап по клетке: инфо</p>
+    </div>
+
+    <div id="cell-info" class="hidden"></div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
